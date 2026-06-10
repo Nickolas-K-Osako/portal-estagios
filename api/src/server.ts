@@ -9,6 +9,9 @@ import AppError from "./utils/AppError"
 
 import vaga from "./routes/vaga"
 import empresa from "./routes/empresa"
+import aluno from "./routes/aluno"
+import candidatura from "./routes/candidatura"
+import notificacao from "./routes/notificacao"
 
 const app = express()
 const PORT = process.env.PORT
@@ -20,6 +23,9 @@ app.use(express.json())
 // Rotas
 app.use("/api/vagas", vaga)
 app.use("/api/empresas", empresa)
+app.use("/api/alunos", aluno)
+app.use("/api/candidaturas", candidatura)
+app.use("/api/notificacoes", notificacao)
 
 // Middleware de erro
 const handleErrorMiddleware = (

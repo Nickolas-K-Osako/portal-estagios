@@ -16,41 +16,62 @@ const empresaSchema = z.object({
   status: z.string().optional(),
 })
 
-router.get("/", async (req, res) => {
-  const empresas = await empresaRepository.find()
-  res.json(empresas)
+router.get("/", async (req, res, next) => {
+  try {
+    const empresas = await empresaRepository.find()
+    res.json(empresas)
+  } catch (error) {
+    next(error)
+  }
+
 })
 
-router.get("/:id", async (req, res) => {
-  const id = Number(req.params.id)
-  const empresa = await empresaRepository.findOneBy({ id })
-  if (!empresa) throw new AppError("Empresa não encontrada", 404)
-  res.json(empresa)
+router.get("/:id", async (req, res, next) => {
+  try{
+    const id = Number(req.params.id)
+    const empresa = await empresaRepository.findOneBy({ id })
+    if (!empresa) throw new AppError("Empresa não encontrada", 404)
+    res.json(empresa)
+  } catch (error) {
+    next(error);
+  }
+  
+})
+router.post("/", async (req, res, next) => {
+  try {
+    const body = empresaSchema.parse(req.body)
+    const empresa = empresaRepository.create(body)
+    const result = await empresaRepository.save(empresa)
+    res.status(201).json(result)
+  } catch (error) {
+    next(error)
+  }
 })
 
-router.post("/", async (req, res) => {
-  const body = empresaSchema.parse(req.body)
-  const empresa = empresaRepository.create(body)
-  const result = await empresaRepository.save(empresa)
-  res.status(201).json(result)
+router.put("/:id", async (req, res, next) => {
+  try {
+    const id = Number(req.params.id)
+    const empresa = await empresaRepository.findOneBy({ id })
+    if (!empresa) throw new AppError("Empresa não encontrada", 404)
+    const body = empresaSchema.partial().parse(req.body)
+    empresaRepository.merge(empresa, body)
+    const result = await empresaRepository.save(empresa)
+    res.json(result)
+  } catch (error) {
+    next(error)
+  }
 })
 
-router.put("/:id", async (req, res) => {
-  const id = Number(req.params.id)
-  const empresa = await empresaRepository.findOneBy({ id })
-  if (!empresa) throw new AppError("Empresa não encontrada", 404)
-  const body = empresaSchema.partial().parse(req.body)
-  empresaRepository.merge(empresa, body)
-  const result = await empresaRepository.save(empresa)
-  res.json(result)
-})
-
-router.delete("/:id", async (req, res) => {
-  const id = Number(req.params.id)
-  const empresa = await empresaRepository.findOneBy({ id })
-  if (!empresa) throw new AppError("Empresa não encontrada", 404)
-  await empresaRepository.remove(empresa)
-  res.status(204).send()
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const id = Number(req.params.id)
+    const empresa = await empresaRepository.findOneBy({ id })
+    if (!empresa) throw new AppError("Empresa não encontrada", 404)
+    await empresaRepository.remove(empresa)
+    res.status(204).send()
+  } catch (error) {
+    next(error)
+  }
 })
 
 export default router
