@@ -33,6 +33,11 @@ Crie o banco de dados `db_estagio` no MySQL, depois rode as migrations:
 ```bash
 npx typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts
 ```
+Popule o banco com dados iniciais:
+
+```bash
+npm run seed
+```
 
 Inicie o servidor:
 
