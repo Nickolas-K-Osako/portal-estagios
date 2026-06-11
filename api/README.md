@@ -24,7 +24,7 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASS=
-DB_NAME=banco_estagio
+DB_NAME=db_estagio
 PORT=3000
 ```
 
