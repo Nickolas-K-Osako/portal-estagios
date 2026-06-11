@@ -67,6 +67,7 @@ public class TelaCandidaturas extends TelaBase {
         rodape.add(btnExcluir);
         rodape.add(btnStatus);
         return rodape;
+        System.out.println("testando git");
     }
 
     // ── métodos específicos de Candidatura ────────────────────────────
