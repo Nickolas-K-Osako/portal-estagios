@@ -1,7 +1,6 @@
 package gui;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
@@ -9,70 +8,67 @@ import java.util.List;
 public class TelaAlunos extends JFrame {
 
     private final AlunoService service = new AlunoService();
-
-    private JTable tabela;
-    private DefaultTableModel modelo;
     private List<Aluno> alunos;
-    private JTextField txtBusca;
 
     public TelaAlunos() {
-        setTitle("Gestão de Alunos - UniALFA");
-        setSize(800, 500);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
+        super("Gestão de Alunos - UniALFA", 800, 500);
+    }
 
-        JPanel topo = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
-        topo.add(new JLabel("Buscar por nome:"));
-        txtBusca = new JTextField(20);
-        JButton btnBuscar = new JButton("Buscar");
-        JButton btnLimpar = new JButton("Limpar");
-        topo.add(txtBusca);
-        topo.add(btnBuscar);
-        topo.add(btnLimpar);
-        add(topo, BorderLayout.NORTH);
+    @Override
+    protected String labelBusca() {
+        return "Buscar por nome:";
+    }
 
-        String[] colunas = {"ID", "Nome", "RA", "Email", "Curso", "Apto"};
-        modelo = new DefaultTableModel(colunas, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
-        };
-        tabela = new JTable(modelo);
-        tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    @Override
+    protected String[] colunas() {
+        return new String[]{"ID", "Nome", "RA", "Email", "Curso", "Apto"};
+    }
+
+    @Override
+    protected void configurarColunas() {
         tabela.getColumnModel().getColumn(0).setPreferredWidth(40);
         tabela.getColumnModel().getColumn(5).setPreferredWidth(50);
-        add(new JScrollPane(tabela), BorderLayout.CENTER);
+    }
 
-        JPanel rodape = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
+    @Override
+    protected void carregarDados() {
+        alunos = service.listar();
+        preencherTabela(alunos);
+    }
+
+    @Override
+    protected void buscar(String termo) {
+        if (termo.isBlank()) { carregarDados(); return; }
+        List<Aluno> filtrados = alunos.stream()
+                .filter(a -> a.getNome().toLowerCase().contains(termo))
+                .toList();
+        preencherTabela(filtrados);
+    }
+
+    @Override
+    protected JPanel montarRodape() {
         JButton btnNovo     = new JButton("Novo Aluno");
         JButton btnEditar   = new JButton("Editar");
         JButton btnExcluir  = new JButton("Excluir");
         JButton btnApto     = new JButton("Alternar Aptidão");
         JButton btnImportar = new JButton("Importar .txt");
-        rodape.add(btnNovo);
-        rodape.add(btnEditar);
-        rodape.add(btnExcluir);
-        rodape.add(btnApto);
-        rodape.add(btnImportar);
-        add(rodape, BorderLayout.SOUTH);
 
         btnNovo.addActionListener(e -> abrirFormulario(null));
         btnEditar.addActionListener(e -> {
-            Aluno selecionado = getAlunoSelecionado();
+            Aluno selecionado = getAluno();
             if (selecionado != null) abrirFormulario(selecionado);
         });
         btnExcluir.addActionListener(e -> excluir());
         btnApto.addActionListener(e -> alternarAptidao());
         btnImportar.addActionListener(e -> importarTxt());
-        btnBuscar.addActionListener(e -> buscar());
-        txtBusca.addActionListener(e -> buscar());
-        btnLimpar.addActionListener(e -> { txtBusca.setText(""); carregarDados(); });
 
-        carregarDados();
-    }
-
-    private void carregarDados() {
-        alunos = service.listar();
-        preencherTabela(alunos);
+        JPanel rodape = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
+        rodape.add(btnNovo);
+        rodape.add(btnEditar);
+        rodape.add(btnExcluir);
+        rodape.add(btnApto);
+        rodape.add(btnImportar);
+        return rodape;
     }
 
     private void preencherTabela(List<Aluno> lista) {
@@ -86,22 +82,9 @@ public class TelaAlunos extends JFrame {
         }
     }
 
-    private void buscar() {
-        String termo = txtBusca.getText().trim().toLowerCase();
-        if (termo.isBlank()) { carregarDados(); return; }
-        List<Aluno> filtrados = alunos.stream()
-                .filter(a -> a.getNome().toLowerCase().contains(termo))
-                .toList();
-        preencherTabela(filtrados);
-    }
-
-    private Aluno getAlunoSelecionado() {
-        int linha = tabela.getSelectedRow();
-        if (linha < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione um aluno na tabela.");
-            return null;
-        }
-        int id = (int) modelo.getValueAt(linha, 0);
+    private Aluno getAluno() {
+        int id = getIdSelecionado("um aluno");
+        if (id == -1) return null;
         return alunos.stream().filter(a -> a.getId() == id).findFirst().orElse(null);
     }
 
@@ -142,7 +125,7 @@ public class TelaAlunos extends JFrame {
     }
 
     private void excluir() {
-        Aluno a = getAlunoSelecionado();
+        Aluno a = getAluno();
         if (a == null) return;
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Excluir o aluno \"" + a.getNome() + "\"?",
@@ -154,7 +137,7 @@ public class TelaAlunos extends JFrame {
     }
 
     private void alternarAptidao() {
-        Aluno a = getAlunoSelecionado();
+        Aluno a = getAluno();
         if (a == null) return;
         a.setApto(!a.isApto());
         service.editar(a);
